@@ -46,6 +46,7 @@ Shader "Kuwahara/Generalized V2"
             float4 _MainTex_ST;
             float4 _Albedo;
             int _KernelRadius;
+            float _ZeroCrossing;
             static const float PI = 3.14159265f;
 
             float calcBrightness (float4 color)
@@ -71,11 +72,14 @@ Shader "Kuwahara/Generalized V2"
                 float gamma = _ZeroCrossing;
                 // One of the constants for the polynomial weight.
                 // Controls how much overlap at the origin.
-                float zeta = 2 / r;
+                float zeta = 2 / radius;
                 // The other constant for the polynomial weight.
                 // Controls how much overlap at the sides.
                 // Looks like n.
-                float eta = (xi + cos(gamma)) / (sin(gamma) * sin(gamma));
+                float eta = (zeta + cos(gamma)) / (sin(gamma) * sin(gamma));
+
+                float4 totalColors[8];
+                float tcSquared[8];
 
                 ///
                 /// Time for calculations
@@ -89,7 +93,7 @@ Shader "Kuwahara/Generalized V2"
                         // We will take this offset vector and rotate it to
                         // test the pixels.
                         float2 v = float2(x,y) / radius;
-                        float4 color = tex2D(_MainTex, uv + float2(x,y) * _MainTex_TexelSize.xy);
+                        float4 color = tex2D(_MainTex, i.uv + float2(x,y) * _MainTex_TexelSize.xy);
 
                         float weightSum = 0;
                         float weights[8];
@@ -114,21 +118,72 @@ Shader "Kuwahara/Generalized V2"
                         weightSum += weights[0];
 
                         // Rotation = pi/2
-                        z = max(-v.x + vyy);
+                        z = max(0, -v.x + vyy);
                         weights[2] = z * z;
                         weightSum += weights[2];
 
                         // Rotation = pi
-                        z = max(-v.y + vxx);
+                        z = max(0, -v.y + vxx);
                         weights[4] = z * z;
                         weightSum += weights[4];
 
                         // Rotation = 3pi/2
-                        z = max(v.x + vyy);
+                        z = max(0, v.x + vyy);
                         weights[6] = z * z;
                         weightSum += weights[6];
+
+                        // Now, we rotate by pi/4 to calculate the other
+                        // weights
+                        v = sqrt(2) / 2 * float2(v.x - v.y, v.x + v.y);
+                        vxx = zeta - eta * v.x * v.x;
+                        vyy = zeta - eta * v.y * v.y;
+
+                        // Rotation = pi/4 + 0
+                        z = max(0, v.x + vyy);
+                        weights[1] = z * z;
+                        weightSum += weights[1];
+
+                        // Rotation = pi/4 + pi/2
+                        z = max(0, -v.x + vyy);
+                        weights[3] = z * z;
+                        weightSum += weights[3];
+
+                        // Rotation = pi/4 + pi
+                        z = max(0, -v.y + vxx);
+                        weights[5] = z * z;
+                        weightSum += weights[5];
+
+                        // Rotation = pi/4 + 3pi/2
+                        z = max(0, v.x + vyy);
+                        weights[7] = z * z;
+                        weightSum += weights[7];
+
+                        // Some more calculations with weights.
+                        // I'm not really sure what this does exactly.
+                        float g = exp(-3.125 * dot(v, v)) / weightSum;
+
+                        for (int k = 0; k < 8; k++)
+                        {
+                            // Scale each weight by the mystery calculation.
+                            float wk = weights[k] * g;
+                            // Add to total colors (a value is the weight).
+                            totalColors[k] += float4(color.rgb * wk, wk);
+                            // Running std calculation.
+                            tcSquared[k] += color * color * wk;
+                        }
                     }
                 }
+
+                float4 finalColor = 0;
+
+                for (int k = 0; k < 8; k++)
+                {
+                    finalColor += totalColors[k];
+                    float std = sqrt(tcSquared[k] / totalColors[k].w -
+                        totalColors[k].rgb * totalColors[k].rgb);
+                }
+
+                return finalColor / finalColor.w;
             }
             ENDCG
         }
