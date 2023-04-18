@@ -67,7 +67,7 @@ Shader "Kuwahara/Basic"
                     for (int c = _KernelSize * (offX - 1); c <= _KernelSize * offX; c++)
                     {
                         // Calculate color at some offset
-                        float4 color = tex2D(_MainTex, uv + float2(r,c) * _MainTex_TexelSize.xy) * _Albedo;
+                        float4 color = tex2D(_MainTex, uv + float2(c,r) * _MainTex_TexelSize.xy) * _Albedo;
                         totalColor += color;
 
                         // Calculate brightness

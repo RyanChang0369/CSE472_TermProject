@@ -61,8 +61,9 @@ Shader "Kuwahara/Generalized"
                 float lb = (2 * sector - 1) * PI / 8;
                 float ub = (2 * sector + 1) * PI / 8;
 
-                int halfSize = _KernelSize / 2;
+                int halfSize = _KernelSize / 2.0;
                 int n = halfSize * halfSize;
+                // n=1;
 
                 for (int r = -halfSize; r <= halfSize; r++)
                 {
@@ -70,9 +71,10 @@ Shader "Kuwahara/Generalized"
                     {
                         float theta = atan2(r + uv.y, c + uv.x);
                         int inSector = lb < theta && theta <= ub;
+                        // inSector = 0;
 
                         // Calculate color at some offset
-                        float4 color = tex2D(_MainTex, uv + float2(r,c) * _MainTex_TexelSize.xy) * _Albedo * inSector;
+                        float4 color = tex2D(_MainTex, uv + float2(c,r) * _MainTex_TexelSize.xy) * _Albedo * inSector;
                         totalColor += color;
 
                         // Calculate brightness
@@ -81,14 +83,18 @@ Shader "Kuwahara/Generalized"
                         // Increment values for running std
                         totalBrightness += b;
                         totalBrightnessSquared += b * b;
+
+                        // n = n + inSector;
                     }
                 }
 
                 float mean = totalBrightness / n;
                 float std = sqrt(totalBrightnessSquared / n - mean * mean);
 
-                float weight = 1 / (1 + std);
+                float weight = 1.0f / (1.0f + std);
+                // float weight = 0.01f;
                 float4 weighedColor = totalColor * weight;
+                // weighedColor = tex2D(_MainTex, uv);
 
                 return float4(weighedColor.rgb, weight);
             }
@@ -103,18 +109,43 @@ Shader "Kuwahara/Generalized"
 
             float4 frag (v2f i) : SV_Target
             {
-                float weightSum = 0;
-                float4 colorSum = 0;
+                // float weightSum = 0;
+                // float4 colorSum = 0;
 
-                for (int a = 0; a < 8; a++)
+                // for (int a = 0; a < 8; a++)
+                // {
+                //     float4 sectorOutput = sampleSector(i.uv, a);
+                //     weightSum += sectorOutput[3];
+                //     colorSum += float4(sectorOutput.rgb, 0);
+                // }
+
+                // float4 avgColor = colorSum / weightSum;
+                // avgColor.a = 1;
+                // return avgColor;
+
+                float4 selected = 0;
+
+                // for (int a = 0; a < 8; a++)
+                // {
+                //     float4 sectorOutput = sampleSector(i.uv, a);
+                //     selectedColor = float4(sectorOutput.rgb, 1);
+                // }
+
+                selected = sampleSector(i.uv, 0);
+
+                for (int s = 1; s < 8; s++)
                 {
-                    float4 sectorOutput = sampleSector(i.uv, a);
-                    weightSum += sectorOutput[3];
-                    colorSum += float4(sectorOutput.rgb, 0);
+                    float4 sOut = sampleSector(i.uv, s);
+
+                    float maxW = min(sOut[3], selected[3]);
+
+                    // Select the one with the maximum weight.
+                    selected = selected * (selected[3] == maxW) + sOut * (sOut[3] == maxW);
                 }
 
-                float4 avgColor = colorSum / weightSum;
-                return avgColor;
+                selected = float4(selected.rgb, 1);
+
+                return selected;
             }
             ENDCG
         }
