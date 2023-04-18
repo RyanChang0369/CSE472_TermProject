@@ -44,7 +44,7 @@ Shader "Kuwahara/Generalized"
             float calcBrightness (float4 color)
             {
                 // Luma calculation from https://en.wikipedia.org/wiki/Luma_(video)
-                return 0;
+                return color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
             }
 
             /// Returns:

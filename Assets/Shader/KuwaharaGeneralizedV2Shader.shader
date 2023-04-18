@@ -4,14 +4,18 @@ Shader "Kuwahara/Generalized V2"
     {
         _Albedo ("Albedo", Color) = (1,1,1,1)
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
-        _KernelSize("Kernel Size", Integer) = 1
+        _KernelRadius("Kernel Radius", Integer) = 1
 
         // The zero crossing is the plane at which we cut the weighting
         // polynomial. All of the polynomial that falls under this plane
         // is treated as zero.
         _ZeroCrossing("Zero Crossing", float) = 8
-        //_Glossiness ("Smoothness", Range(0,1)) = 0.5
-        //_Metallic ("Metallic", Range(0,1)) = 0.0
+
+        // Determines how blurry the image is.
+        _Sharpness("Sharpness", range(0, 20)) = 10
+
+        // Determines how in focus the image is.
+        _Focus("Focus", range(0, 200)) = 10
     }
     SubShader
     {
@@ -46,13 +50,13 @@ Shader "Kuwahara/Generalized V2"
             float4 _MainTex_ST;
             float4 _Albedo;
             int _KernelRadius;
-            float _ZeroCrossing;
+            float _ZeroCrossing, _Sharpness, _Focus;
             static const float PI = 3.14159265f;
 
-            float calcBrightness (float4 color)
+            float calcBrightness (float3 color)
             {
                 // Luma calculation from https://en.wikipedia.org/wiki/Luma_(video)
-                return 0;
+                return color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
             }
 
             v2f vert (appdata v)
@@ -72,23 +76,29 @@ Shader "Kuwahara/Generalized V2"
                 float gamma = _ZeroCrossing;
                 // One of the constants for the polynomial weight.
                 // Controls how much overlap at the origin.
-                float zeta = 2 / radius;
+                float zeta = 2.0 / radius;
                 // The other constant for the polynomial weight.
                 // Controls how much overlap at the sides.
                 // Looks like n.
                 float eta = (zeta + cos(gamma)) / (sin(gamma) * sin(gamma));
 
                 float4 totalColors[8];
-                float tcSquared[8];
+                float3 tcSquared[8];
+
+                for (int itr1 = 0; itr1 < 8; itr1++)
+                {
+                    totalColors[itr1] = 0.0;
+                    tcSquared[itr1] = 0.0;
+                }
 
                 ///
                 /// Time for calculations
                 ///
-                // This is blantently stolen from the text btw.
+                // Most of this code is from the text
 
-                for (int x = -radius; x <= radius; x++)
+                for (int y = -radius; y <= radius; y++)
                 {
-                    for (int y = -radius; y <= radius; y++)
+                    for (int x = -radius; x <= radius; x++)
                     {
                         // We will take this offset vector and rotate it to
                         // test the pixels.
@@ -134,12 +144,12 @@ Shader "Kuwahara/Generalized V2"
 
                         // Now, we rotate by pi/4 to calculate the other
                         // weights
-                        v = sqrt(2) / 2 * float2(v.x - v.y, v.x + v.y);
+                        v = sqrt(2.0) / 2.0 * float2(v.x - v.y, v.x + v.y);
                         vxx = zeta - eta * v.x * v.x;
                         vyy = zeta - eta * v.y * v.y;
 
                         // Rotation = pi/4 + 0
-                        z = max(0, v.x + vyy);
+                        z = max(0, v.y + vxx);
                         weights[1] = z * z;
                         weightSum += weights[1];
 
@@ -166,24 +176,32 @@ Shader "Kuwahara/Generalized V2"
                         {
                             // Scale each weight by the mystery calculation.
                             float wk = weights[k] * g;
+
                             // Add to total colors (a value is the weight).
                             totalColors[k] += float4(color.rgb * wk, wk);
+
                             // Running std calculation.
                             tcSquared[k] += color * color * wk;
                         }
                     }
                 }
 
-                float4 finalColor = 0;
+                float4 finalColor = 0.0;
 
                 for (int k = 0; k < 8; k++)
                 {
-                    finalColor += totalColors[k];
-                    float std = sqrt(tcSquared[k] / totalColors[k].w -
-                        totalColors[k].rgb * totalColors[k].rgb);
+                    totalColors[k].rgb /= totalColors[k].w;
+                    float3 std = sqrt(abs(tcSquared[k] / totalColors[k].w
+                        - totalColors[k].rgb * totalColors[k].rgb));
+                    float b = calcBrightness(std);
+
+                    float weight = 1.0 / (1.0 + pow(_Focus * b, _Sharpness));
+
+                    finalColor += float4(totalColors[k].rgb * weight, weight);
                 }
 
-                return finalColor / finalColor.w;
+                finalColor = float4((finalColor / finalColor.w).rgb, 1);
+                return finalColor;
             }
             ENDCG
         }
