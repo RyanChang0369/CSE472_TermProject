@@ -44,7 +44,7 @@ Shader "Kuwahara/Generalized"
             float calcBrightness (float4 color)
             {
                 // Luma calculation from https://en.wikipedia.org/wiki/Luma_(video)
-                return color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
+                return 0;
             }
 
             /// Returns:
@@ -92,11 +92,8 @@ Shader "Kuwahara/Generalized"
                 float std = sqrt(totalBrightnessSquared / n - mean * mean);
 
                 float weight = 1.0f / (1.0f + std);
-                // float weight = 0.01f;
-                float4 weighedColor = totalColor * weight;
-                // weighedColor = tex2D(_MainTex, uv);
 
-                return float4(weighedColor.rgb, weight);
+                return float4(totalColor.rgb, weight);
             }
 
             v2f vert (appdata v)
@@ -109,43 +106,28 @@ Shader "Kuwahara/Generalized"
 
             float4 frag (v2f i) : SV_Target
             {
-                // float weightSum = 0;
-                // float4 colorSum = 0;
+                float weightSum = 0;
+                float weights[8];
+                float3 colors[8];
 
-                // for (int a = 0; a < 8; a++)
-                // {
-                //     float4 sectorOutput = sampleSector(i.uv, a);
-                //     weightSum += sectorOutput[3];
-                //     colorSum += float4(sectorOutput.rgb, 0);
-                // }
-
-                // float4 avgColor = colorSum / weightSum;
-                // avgColor.a = 1;
-                // return avgColor;
-
-                float4 selected = 0;
-
-                // for (int a = 0; a < 8; a++)
-                // {
-                //     float4 sectorOutput = sampleSector(i.uv, a);
-                //     selectedColor = float4(sectorOutput.rgb, 1);
-                // }
-
-                selected = sampleSector(i.uv, 0);
-
-                for (int s = 1; s < 8; s++)
+                for (int a = 0; a < 8; a++)
                 {
-                    float4 sOut = sampleSector(i.uv, s);
-
-                    float maxW = min(sOut[3], selected[3]);
-
-                    // Select the one with the maximum weight.
-                    selected = selected * (selected[3] == maxW) + sOut * (sOut[3] == maxW);
+                    float4 sectorOutput = sampleSector(i.uv, a);
+                    weightSum += sectorOutput[3];
+                    weights[a] = sectorOutput[3];
+                    colors[a] = sectorOutput.rgb;
                 }
 
-                selected = float4(selected.rgb, 1);
+                float4 weightedColor = 0;
 
-                return selected;
+                for (int a = 0; a < 8; a++)
+                {
+                    weightedColor += float4(colors[a] * weights[a], 0);
+                }
+                
+                weightedColor /= weightSum;
+                weightedColor.a = 1;
+                return weightedColor;
             }
             ENDCG
         }
