@@ -1,1 +1,5 @@
 "dingus the cat" (https://skfb.ly/oAtMJ) by bean(alwayshasbean) is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+Inspired by "This is the Kuwahara Filter" (https://www.youtube.com/watch?v=LDhN-JK3U9g&t=714s) by Acerola.
+
+Code derived from "Anisotropic Kuwahara Filtering with Polynomial Weighting Functions" by Jan Eric Kyprianidis, Amir Semmo, Henry Kang, Jürgen Döllner.
