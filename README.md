@@ -7,6 +7,11 @@ it is now used for artistic effect.
 # Credits
 This project is heavily inspired by the YouTube video
 ["This is the Kuwahara Filter"](https://www.youtube.com/watch?v=LDhN-JK3U9g&t=715s&pp=ygUPa3V3YWhhcmEgZmlsdGVy)
-by Acerola. Code for the generalized Kuwahara filter is based on the white paper
+by Acerola.
+
+Code for the generalized Kuwahara filter is based on the white paper
 "Anisotropic Kuwahara Filtering with Polynomial Weighting Functions" by Jan Eric Kyprianidis,
 Amir Semmo, Henry Kang, Jürgen Döllner.
+
+The model of [Dingus the Cat](https://skfb.ly/oAtMJ) by bean(alwayshasbean)
+is licensed under [Creative Commons Attribution](http://creativecommons.org/licenses/by/4.0/).
