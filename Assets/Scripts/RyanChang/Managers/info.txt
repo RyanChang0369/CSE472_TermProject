@@ -1,0 +1,2 @@
+Managers are MonoBehaviours that are singletons. There exists up to one of each
+type of manager per scene.

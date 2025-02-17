@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 using System.IO;
+using System;
 
 #if UNITY_WEBGL
 using System.Runtime.InteropServices;
@@ -14,7 +15,7 @@ using System.Runtime.InteropServices;
 /// <remarks>
 /// Authors: Ryan Chang (2025)
 /// </remarks>
-public class FileDialogManager
+public class FileDialogManager : MonoBehaviour
 {
     #region Instance
     /// <summary>
@@ -29,7 +30,7 @@ public class FileDialogManager
 
     private void Awake()
     {
-        this.InstantiateSingleton(ref instance);
+        this.InstantiateComponent();
 
 #if UNITY_WEBGL && !UNITY_EDITOR
             // Call the external method.
@@ -46,7 +47,7 @@ public class FileDialogManager
     private static extern void AddClickListenerForFileDialog();
 
     [DllImport("__Internal")]
-    private static extern void FocusFileUploader();
+    private static extern void FocusFileUploader(string accept);
 
     [DllImport("__Internal")]
     private static extern void WriteToDisk_JS(string uri, string content);
@@ -64,7 +65,7 @@ public class FileDialogManager
     /// string.</param>
     /// <param name="uri">The URI. If <paramref name="valid"/> is false, then
     /// this is still filled out.</param>
-    public delegate void PathRetrieved(bool valid, string uri);
+    public delegate void OnPathRetrieved(bool valid, string uri);
 
     /// <summary>
     /// Called when the file contents are retrieved.
@@ -78,7 +79,7 @@ public class FileDialogManager
     #endregion
 
     #region Variables
-    private PathRetrieved cachedPathRetrieved;
+    private OnPathRetrieved cachedPathRetrieved;
 
     private FileContentsRetrieved cachedContentsRetrieved;
 
@@ -86,12 +87,12 @@ public class FileDialogManager
     #endregion
 
     #region Checks
-    public void FileExists(string uri, System.Action<bool> callOnChecked)
+    public void FileExists(string uri, Action<bool> callOnChecked)
     {
         StartCoroutine(FileExists_CR(uri, callOnChecked));
     }
 
-    public IEnumerator FileExists_CR(string uri, System.Action<bool> callOnChecked)
+    public IEnumerator FileExists_CR(string uri, Action<bool> callOnChecked)
     {
         if (Application.isEditor)
         {
@@ -107,7 +108,7 @@ public class FileDialogManager
         }
         else
         {
-            throw new System.InvalidOperationException("Cannot check file. " +
+            throw new InvalidOperationException("Cannot check file. " +
             "Platform mismatch. Supported platforms are WebGL and Editor.");
         }
     }
@@ -117,20 +118,42 @@ public class FileDialogManager
     /// <summary>
     /// Opens a file dialog.
     /// </summary>
-    public void OpenFileDialog(PathRetrieved callOnRetrieved)
+    /// <param name="callOnRetrieved">Callback on retrieval.</param>
+    /// <param name="extensions">Comma-separated list of acceptable file
+    /// extensions.</param>
+    public void OpenFileDialog(OnPathRetrieved callOnRetrieved,
+        string extensions)
     {
 #if UNITY_EDITOR
         string path = UnityEditor.EditorUtility.OpenFilePanel(
-                "File Dialog", "", "json"
+                "File Dialog", "", extensions
             );
         callOnRetrieved(File.Exists(path), path);
 #elif UNITY_WEBGL
         cachedPathRetrieved = callOnRetrieved;
-        FocusFileUploader();
+        FocusFileUploader(extensions);
 #else
         throw new System.InvalidOperationException("Cannot open file dialog. " +
         "Platform mismatch. Supported platforms are WebGL and Editor.");
 #endif
+    }
+
+    /// <summary>
+    /// Coroutine version of <see cref="OpenFileDialog(OnPathRetrieved)"/>.
+    /// </summary>
+    /// <inheritdoc cref="OpenFileDialog"/>
+    public IEnumerator OpenFileDialog_CR(OnPathRetrieved callOnRetrieved,
+        string extensions)
+    {
+        bool retrieved = false;
+
+        OpenFileDialog((valid, path) =>
+        {
+            retrieved = true;
+            callOnRetrieved.Invoke(valid, path);
+        }, extensions);
+
+        yield return new WaitUntil(() => retrieved);
     }
 
     /// <summary>
@@ -152,7 +175,7 @@ public class FileDialogManager
     /// WebGL).</param>
     /// <param name="callOnRetrieved">The callback to invoke when the call is
     /// done.</param>
-    /// <exception cref="System.InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     public void ReadFromFile(string uri, FileContentsRetrieved callOnRetrieved)
     {
 #if UNITY_EDITOR
@@ -161,7 +184,7 @@ public class FileDialogManager
             string contents = File.ReadAllText(uri);
             callOnRetrieved(true, contents);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError(e);
             callOnRetrieved(false, null);

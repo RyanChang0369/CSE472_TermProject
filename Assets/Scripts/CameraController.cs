@@ -1,13 +1,14 @@
 using System.Collections.Generic;
-using Cinemachine;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class CameraController : MonoBehaviour
 {
-    public List<CinemachineVirtualCamera> cameras;
+    [SerializeField]
+    private List<CinemachineCamera> cameras;
 
-    public CinemachineVirtualCamera CurrentCamera => cameras[cameraIndex];
+    private CinemachineCamera CurrentCamera => cameras[cameraIndex];
 
     private int cameraIndex;
 

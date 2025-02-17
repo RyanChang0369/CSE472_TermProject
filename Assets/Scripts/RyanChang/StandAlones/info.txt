@@ -1,0 +1,3 @@
+StandAlones are single non-singleton MonoBehaviours that do not require
+references to other MonoBehaviours in order to function. They are primarily used
+for simple tasks that may be required across multiple projects.

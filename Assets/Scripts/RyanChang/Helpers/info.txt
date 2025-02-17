@@ -1,0 +1,1 @@
+Helpers include all non-MonoBehaviour classes.

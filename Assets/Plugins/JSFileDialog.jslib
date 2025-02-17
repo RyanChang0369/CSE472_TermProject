@@ -9,7 +9,7 @@ mergeInto(
     AddClickListenerForFileDialog: function () {
       // window.alert('Add click listener');
 
-      document.addEventListener('click', function () {
+      document.addEventListener('click', function (accept) {
 
         var fileuploader = document.getElementById('fileuploader');
         if (!fileuploader) {
@@ -18,7 +18,7 @@ mergeInto(
           fileuploader.setAttribute('type', 'file');
           // Only allow json files to be opened. For more info, see
           // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept.
-          fileuploader.setAttribute('accept', '.json');
+          fileuploader.setAttribute('accept', accept);
           fileuploader.setAttribute('id', 'fileuploader');
           fileuploader.setAttribute('class', '');
           document.getElementsByTagName('body')[0].appendChild(fileuploader);
