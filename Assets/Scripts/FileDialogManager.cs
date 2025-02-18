@@ -1,8 +1,6 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.Networking;
 using System.IO;
-using System;
 
 #if UNITY_WEBGL
 using System.Runtime.InteropServices;

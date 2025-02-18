@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,6 +27,12 @@ public class DemoCanvasManager : MonoBehaviour
 
     [SerializeField]
     private RawImage canvasImage;
+
+    [SerializeField]
+    private RectTransform popupContainer;
+
+    [SerializeField]
+    private RectTransform tooltipContainer;
     #endregion
     #endregion
 
