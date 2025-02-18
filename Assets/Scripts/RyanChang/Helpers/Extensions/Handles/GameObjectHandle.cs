@@ -37,8 +37,9 @@ public class GameObjectHandle : MonoBehaviour
         {
             if (!instance)
             {
-                GameObject temp = new(RNGExt.RandomHashString(4));
-                instance = temp.AddComponent<GameObjectHandle>();
+                GameObject instanceGameObject = new(RNGExt.RandomHashString(4));
+                instance = instanceGameObject.AddComponent<GameObjectHandle>();
+                DontDestroyOnLoad(instance);
             }
 
             return instance;
@@ -47,22 +48,23 @@ public class GameObjectHandle : MonoBehaviour
     #endregion
 
     #region AutoPurge
-    private void OnEnable() => AutoPurge(true);
-    private void OnDisable() => AutoPurge(true);
-
     /// <summary>
     /// Logic for whether or not this handle should be destroyed (ie when the
     /// instance no longer refers to this object).
     /// </summary>
-    private void AutoPurge(bool playing)
+    private bool AutoPurge()
     {
-        if (instance != this && Application.IsPlaying(this) == playing)
+        if (instance != this)
         {
-            if (playing)
+            if (Application.IsPlaying(this))
                 Destroy(gameObject);
             else
                 DestroyImmediate(gameObject);
+
+            return true;
         }
+
+        return false;
     }
     #endregion
 
@@ -89,7 +91,7 @@ public class GameObjectHandle : MonoBehaviour
     #region Update Loop
     private void Update()
     {
-        AutoPurge(false);
+        AutoPurge();
 
         if (!this.IsUnityNull() && !Application.IsPlaying(this))
         {

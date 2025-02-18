@@ -102,32 +102,25 @@ public static class WebClientExt
         HandleTextureResponse callOnDone, HandleErrorResponse callOnError)
     {
         // Usage of UnityWebRequestTexture and DownloadHandlerTexture adapted
-        // from
-        // https://stackoverflow.com/questions/31765518/how-to-load-an-image-from-url-with-unity.
+        // from https://stackoverflow.com/a/53766207.
         using UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri);
-        Debug.Log(uri);
+        request.timeout = 5;
         yield return request.SendWebRequest();
 
-        Debug.Log("YEee");
-
-        if (request.result == UnityWebRequest.Result.Success)
+        switch (request.result)
         {
-            Texture2D texture = DownloadHandlerTexture.GetContent(request);
+            case UnityWebRequest.Result.Success:
+                Texture2D texture = DownloadHandlerTexture.GetContent(request);
 
-            if (texture)
-            {
-                callOnDone(
-                    texture
-                );
-            }
-            else
-            {
-                callOnError("Downloaded file is not an image.");
-            }
-        }
-        else
-        {
-            callOnError(request.error);
+                if (texture)
+                    callOnDone(texture);
+                else
+                    callOnError("Downloaded file is not an image.");
+                break;
+
+            default:
+                callOnError(request.error);
+                break;
         }
     }
     #endregion
