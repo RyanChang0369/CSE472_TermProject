@@ -105,7 +105,10 @@ public static class WebClientExt
         // from
         // https://stackoverflow.com/questions/31765518/how-to-load-an-image-from-url-with-unity.
         using UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri);
+        Debug.Log(uri);
         yield return request.SendWebRequest();
+
+        Debug.Log("YEee");
 
         if (request.result == UnityWebRequest.Result.Success)
         {

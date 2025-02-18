@@ -25,16 +25,25 @@ public class DemoCanvasManager : MonoBehaviour
     #region Variables
     #region Settings
     private PullUpMenu pullUpMenu;
+
+    [SerializeField]
+    private RawImage canvasImage;
     #endregion
     #endregion
 
     private void Awake()
     {
-        this.InstantiateComponent();
+        this.InstantiateSingleton(ref instance);
     }
 
     private void Start()
     {
         this.RequireComponentInChildren(out pullUpMenu);
+        pullUpMenu.textureUpdateAvailable.AddListener(UpdateTexture);
+    }
+
+    private void UpdateTexture(Texture texture)
+    {
+        canvasImage.texture = texture;
     }
 }

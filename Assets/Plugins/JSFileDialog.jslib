@@ -11,19 +11,19 @@ mergeInto(
 
       document.addEventListener('click', function (accept) {
 
-        var fileuploader = document.getElementById('fileuploader');
-        if (!fileuploader) {
-          fileuploader = document.createElement('input');
-          fileuploader.setAttribute('style', 'display:none;');
-          fileuploader.setAttribute('type', 'file');
+        var file_uploader = document.getElementById('file_uploader');
+        if (!file_uploader) {
+          file_uploader = document.createElement('input');
+          file_uploader.setAttribute('style', 'display:none;');
+          file_uploader.setAttribute('type', 'file');
           // Only allow json files to be opened. For more info, see
           // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept.
-          fileuploader.setAttribute('accept', accept);
-          fileuploader.setAttribute('id', 'fileuploader');
-          fileuploader.setAttribute('class', '');
-          document.getElementsByTagName('body')[0].appendChild(fileuploader);
+          file_uploader.setAttribute('accept', accept);
+          file_uploader.setAttribute('id', 'file_uploader');
+          file_uploader.setAttribute('class', '');
+          document.getElementsByTagName('body')[0].appendChild(file_uploader);
 
-          fileuploader.onchange = function (e) {
+          file_uploader.onchange = function (e) {
             var files = e.target.files;
             for (var i = 0, f; f = files[i]; i++) {
               // window.alert(URL.createObjectURL(f));
@@ -33,9 +33,9 @@ mergeInto(
             }
           };
         }
-        if (fileuploader.getAttribute('class') == 'focused') {
-          fileuploader.setAttribute('class', '');
-          fileuploader.click();
+        if (file_uploader.getAttribute('class') == 'focused') {
+          file_uploader.setAttribute('class', '');
+          file_uploader.click();
         }
       });
     }
@@ -47,26 +47,26 @@ mergeInto(
   LibraryManager.library,
   {
     FocusFileUploader: function () {
-      var fileuploader = document.getElementById('fileuploader');
-      if (fileuploader) {
-        fileuploader.setAttribute('class', 'focused');
+      var file_uploader = document.getElementById('file_uploader');
+      if (file_uploader) {
+        file_uploader.setAttribute('class', 'focused');
       }
     }
   }
 );
 
-// This one writes to the disk. Derived from
+// This one writes text to the disk. Derived from
 // https://forum.unity.com/threads/webgl-read-write.336171/#post-2678039.
 mergeInto(
   LibraryManager.library,
   {
-    WriteToDisk_JS: function (rawFileName, rawMsg) {
-      var msg = Pointer_stringify(rawMsg);
-      var fn = Pointer_stringify(rawFileName);
+    WriteTextToDisk_JS: function (rawFileName, rawContents) {
+      const contents = Pointer_stringify(rawContents);
+      const fileName = Pointer_stringify(rawFileName);
+      const data = new Blob([contents], { type: 'text/plain' });
 
-      var data = new Blob([msg], { type: 'text/plain' });
       var link = document.createElement('a');
-      link.setAttribute('download', fn);
+      link.setAttribute('download', fileName);
       link.setAttribute('style', 'display:none;');
       link.setAttribute('id', 'TextDownloader');
 
@@ -87,12 +87,54 @@ mergeInto(
   }
 );
 
+// This one writes a byte stream to the disk. Derived from
+// https://discussions.unity.com/t/webgl-saving-a-file-in-the-browser/684252/6.
+mergeInto(
+  LibraryManager.library,
+  {
+    WriteBytesToDisk_JS: function (rawFileName, rawContents) {
+      function fixBinary(bin) {
+        var length = bin.length;
+        var buf = new ArrayBuffer(length);
+        var arr = new Uint8Array(buf);
+        for (var i = 0; i < length; i++) {
+          arr = bin.charCodeAt(i);
+        }
+        return buf;
+      }
+
+      const fileName = Pointer_stringify(rawFileName);
+      const contents = fixBinary(atob(Pointer_stringify(rawContents)));
+      const data = new Blob([contents], { type: 'application/octet-stream' });
+
+      var link = document.createElement('a');
+      link.setAttribute('download', fileName);
+      link.setAttribute('style', 'display:none;');
+      link.setAttribute('id', 'BytesDownloader');
+
+      if (window.webkitURL != null) {
+        link.href = window.webkitURL.createObjectURL(data);
+      }
+      else {
+        link.href = window.URL.createObjectURL(data);
+        link.onclick = function () {
+          var child = document.getElementById('BytesDownloader');
+          child.parentNode.removeChild(child);
+        };
+        link.setAttribute('style', 'display:none;');
+        document.body.appendChild(link);
+      }
+      link.click();
+    }
+  }
+);
+
 // Save as file dialog.
 mergeInto(
   LibraryManager.library,
   {
     /// rawFileName includes the extension!
-    DownloadFileDialog_JS: function (rawFileName, rawContents) {
+    DownloadTextDialog_JS: function (rawFileName, rawContents) {
       const fileName = Pointer_stringify(rawFileName);
       const contents = Pointer_stringify(rawContents);
       const data = new Blob([contents], { type: 'text/plain' });
@@ -101,16 +143,55 @@ mergeInto(
       // However, this function is experimental right now and only works on
       // HTTPS connections on Chromium browsers, so I can't test it. Here's a
       // website showing it in action though: https://save-canvas-as.glitch.me/.
-      var filesaver = document.getElementById('filesaver');
+      var fileSaver = document.getElementById('file_saver');
 
-      if (!filesaver) {
-        filesaver = document.createElement('a');
-        filesaver.id = 'filesaver';
+      if (!fileSaver) {
+        fileSaver = document.createElement('a');
+        fileSaver.id = 'file_saver';
       }
 
-      filesaver.href = URL.createObjectURL(data);
-      filesaver.download = fileName;
-      filesaver.click();
+      fileSaver.href = URL.createObjectURL(data);
+      fileSaver.download = fileName;
+      fileSaver.click();
     }
   }
-)
+);
+
+// Save as file dialog.
+mergeInto(
+  LibraryManager.library,
+  {
+    /// rawFileName includes the extension!
+    DownloadBytesDialog_JS: function (rawFileName, rawContents) {
+      
+      function fixBinary(bin) {
+        var length = bin.length;
+        var buf = new ArrayBuffer(length);
+        var arr = new Uint8Array(buf);
+        for (var i = 0; i < length; i++) {
+          arr = bin.charCodeAt(i);
+        }
+        return buf;
+      }
+
+      const fileName = Pointer_stringify(rawFileName);
+      const contents = fixBinary(atob(Pointer_stringify(rawContents)));
+      const data = new Blob([contents], { type: 'application/octet-stream' });
+
+      // There is another function I can use here, which is showSaveFilePicker.
+      // However, this function is experimental right now and only works on
+      // HTTPS connections on Chromium browsers, so I can't test it. Here's a
+      // website showing it in action though: https://save-canvas-as.glitch.me/.
+      var fileSaver = document.getElementById('file_saver');
+
+      if (!fileSaver) {
+        fileSaver = document.createElement('a');
+        fileSaver.id = 'file_saver';
+      }
+
+      fileSaver.href = URL.createObjectURL(data);
+      fileSaver.download = fileName;
+      fileSaver.click();
+    }
+  }
+);
