@@ -402,5 +402,49 @@ public static class EditorExt
         Selection.activeObject = so;
         return so;
     }
+
+    #region Asset Manipulation
+    /// <summary>
+    /// Creates and saves an unity object as an asset.
+    /// </summary>
+    /// <param name="asset">The object to make into an asset.</param>
+    /// <param name="filePath">Path of the asset.</param>
+    public static void SaveAsset(UnityEngine.Object asset, string filePath)
+    {
+        string folderPath = IOPath.GetDirectoryName(filePath);
+        Directory.CreateDirectory(folderPath);
+
+        AssetDatabase.CreateAsset(asset, filePath);
+        AssetDatabase.SaveAssets();
+    }
+
+    /// <summary>
+    /// Loads or creates a "scriptable asset". If <paramref name="filePath"/>
+    /// points to an asset, loads that asset as a scriptable object. Otherwise,
+    /// creates the asset and saves it to <paramref name="filePath"/>.
+    /// </summary>
+    /// <param name="scriptable">The scriptable object to assign to.</param>
+    /// <param name="filePath">Path of the asset.</param>
+    /// <typeparam name="T">The type of scriptable object to create.</typeparam>
+    /// <returns>The created scriptable asset.</returns>
+    public static void ScriptableAsset<T>(ref T scriptable, string filePath)
+        where T : ScriptableObject
+    {
+        if (File.Exists(filePath))
+        {
+            if (scriptable)
+                return;
+
+            // File exists. Load it.
+            scriptable = AssetDatabase.LoadAssetAtPath<T>(filePath);
+        }
+        else
+        {
+            // Create the asset.
+            scriptable = ScriptableObject.CreateInstance<T>();
+            SaveAsset(scriptable, filePath);
+        }
+    }
+    #endregion
     #endregion
 }
