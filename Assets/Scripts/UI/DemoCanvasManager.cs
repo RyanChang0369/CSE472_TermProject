@@ -50,6 +50,18 @@ public class DemoCanvasManager : MonoBehaviour
     private void UpdateTexture(Texture texture)
     {
         canvasImage.texture = texture;
+
+        if (canvasImage.HasComponent(out ImageAspectRatioFitter fitter))
+        {
+            fitter.SetLayoutVertical();
+            // Jostle the canvas image around to update the image ratio fitter.
+            ((RectTransform)canvasImage.transform).anchoredPosition = Vector2.zero;
+        }
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 
     #region Get Material Parameter

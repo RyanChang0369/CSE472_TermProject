@@ -9,6 +9,7 @@ using UnityEngine.UI;
 /// <remarks>
 /// Authors: Ryan Chang (2024)
 /// </remarks>
+[ExecuteAlways]
 public class ImageAspectRatioFitter : UIBehaviour, ILayoutSelfController,
     ILayoutController
 {
@@ -37,30 +38,28 @@ public class ImageAspectRatioFitter : UIBehaviour, ILayoutSelfController,
 
     public void SetLayoutHorizontal()
     {
-
+        
     }
 
     public void SetLayoutVertical()
     {
-
-    }
-
-    protected override void OnRectTransformDimensionsChange()
-    {
-        base.OnRectTransformDimensionsChange();
-        UpdateRect();
-    }
-
-    protected override void OnTransformParentChanged()
-    {
-        base.OnTransformParentChanged();
         UpdateRect();
     }
 
     protected override void OnEnable()
     {
         base.OnEnable();
+        InitImages();
+    }
 
+    protected override void Start()
+    {
+        base.Start();
+        InitImages();
+    }
+
+    private void InitImages()
+    {
         image = GetComponent<Image>();
         rawImage = GetComponent<RawImage>();
 
@@ -76,7 +75,7 @@ public class ImageAspectRatioFitter : UIBehaviour, ILayoutSelfController,
         if (ImageTexture != null && parent)
         {
             Vector2 textureSize = new(ImageTexture.width, ImageTexture.height);
-            float ratio = textureSize.x / textureSize.y;
+            float ratio = textureSize.y / textureSize.x;
             Rect bounds = new(0, 0, parent.rect.width, parent.rect.height);
 
             if (self.eulerAngles.z.RoundToInt() % 180 == 90)
@@ -85,20 +84,20 @@ public class ImageAspectRatioFitter : UIBehaviour, ILayoutSelfController,
                 bounds.size = new(bounds.height, bounds.width);
             }
 
-            if (ratio > 1)
+            if (ratio < bounds.height / bounds.width)
             {
-                // Image width > height.
+                // Image height > width.
                 w = bounds.width;
-                h = w / ratio;
+                h = w * ratio;
             }
             else
             {
-                // Image width <= height.
+                // Image height <= width.
                 h = bounds.height;
-                w = h * ratio;
+                w = h / ratio;
             }
         }
-        
+        // self.sizeDelta = new(w, h);
         self.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
         self.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, h);
     }

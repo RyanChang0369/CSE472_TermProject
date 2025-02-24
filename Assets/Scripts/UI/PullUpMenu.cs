@@ -21,8 +21,6 @@ public class PullUpMenu : MonoBehaviour
 
     private TMPro.TMP_Text showHideMenuButtonText;
 
-    public Button fileUploadButton;
-
     public TMPro.TMP_InputField uriInputField;
 
     public Button uriSearchButton;
@@ -46,16 +44,7 @@ public class PullUpMenu : MonoBehaviour
     {
         showHideMenuButton.onClick.AddListener(ToggleAnimationDirection);
         showHideMenuButton.RequireComponentInChildren(out showHideMenuButtonText);
-        fileUploadButton.onClick.AddListener(FileUploadButton_OnClick);
         uriSearchButton.onClick.AddListener(UriSearchButton_OnClick);
-    }
-
-    private void FileUploadButton_OnClick()
-    {
-        FileDialogManager.Instance.OpenFileDialog(
-            OnFileReadDialogOpen,
-            "image/*"
-        );
     }
 
     private void UriSearchButton_OnClick()
