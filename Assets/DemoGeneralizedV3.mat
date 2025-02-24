@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: DemoGeneralizedV2
-  m_Shader: {fileID: 4800000, guid: 445fb577e8ba1c441a6772e64a11e360, type: 3}
+  m_Name: DemoGeneralizedV3
+  m_Shader: {fileID: 4800000, guid: fb96d5d04ef04bb27ae2fa342d82c646, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -60,14 +60,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints:
-    - _KernelRadius: 20
+    - _KernelRadius: 7
     - _KernelSize: 10
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _Focus: 100
+    - _Focus: 27.713472
     - _GlossMapScale: 1
     - _Glossiness: 1
     - _GlossyReflections: 1
@@ -77,13 +77,15 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _Q: 20
-    - _Sharpness: 20
+    - _Radius: 10.702972
+    - _Scale: 1.1540154
+    - _Sharpness: 10
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _ZeroCrossing: 0.5
+    - _ZeroCrossing: 0.4018731
     m_Colors:
     - _Albedo: {r: 0.3018868, g: 0.3018868, b: 0.3018868, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}

@@ -51,4 +51,51 @@ public class DemoCanvasManager : MonoBehaviour
     {
         canvasImage.texture = texture;
     }
+
+    #region Get Material Parameter
+    public object GetMaterialFloat(string parameter)
+    {
+        return canvasImage.material.GetFloat(parameter);
+    }
+
+    public object GetMaterialInteger(string parameter)
+    {
+        return canvasImage.material.GetInteger(parameter);
+    }
+
+
+    public object GetMaterialTexture(string parameter)
+    {
+        return canvasImage.material.GetTexture(parameter);
+    }
+
+
+    public object GetMaterialColor(string parameter)
+    {
+        return canvasImage.material.GetColor(parameter);
+    }
+    #endregion
+
+
+    #region Set Material Parameter
+    public void SetMaterialParameter(string parameter, float value)
+    {
+        canvasImage.material.SetFloat(parameter, value);
+    }
+
+    public void SetMaterialParameter(string parameter, int value)
+    {
+        canvasImage.material.SetInteger(parameter, value);
+    }
+
+    public void SetMaterialParameter(string parameter, Texture value)
+    {
+        canvasImage.material.SetTexture(parameter, value);
+    }
+
+    public void SetMaterialParameter(string parameter, Color value)
+    {
+        canvasImage.material.SetColor(parameter, value);
+    }
+    #endregion
 }
